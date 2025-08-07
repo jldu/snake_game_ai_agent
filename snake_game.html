@@ -1,0 +1,1226 @@
+
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 3em;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .game-info div {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .speed-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .speed-controls button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .speed-controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .speed-controls button:active {
+            transform: translateY(0);
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(76, 175, 80, 0.8), 0 0 30px rgba(76, 175, 80, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        /* 应用动画到元素 */
+        .container {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        h1 {
+            animation: fadeIn 1s ease-out 0.2s both;
+        }
+        
+        .game-info {
+            animation: fadeIn 1s ease-out 0.4s both;
+        }
+        
+        #gameContainer {
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+        
+        #controls {
+            animation: fadeIn 1s ease-out 0.8s both;
+        }
+        
+        /* 开始界面动画 */
+        #startScreen {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        #startBtn {
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+        
+        #startBtn:hover {
+            animation: none;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.5);
+        }
+        
+        /* 游戏结束界面动画 */
+        #gameOver {
+            animation: bounce 0.6s ease-out;
+        }
+        
+        /* 得分增加动画 */
+        .score-increase {
+            animation: pulse 0.3s ease-out;
+        }
+        
+        /* 速度变化动画 */
+        .speed-change {
+            animation: pulse 0.5s ease-out;
+        }
+        
+        /* 按钮点击效果 */
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        /* 链接悬停效果 */
+        a {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        
+        a:hover::after {
+            width: 100%;
+        }
+        
+        /* 微信登录按钮动画 */
+        #wechatLoginBtn {
+            transition: all 0.3s ease;
+        }
+        
+        #wechatLoginBtn:hover {
+            animation: glow 1.5s infinite;
+        }
+        
+        /* 触屏控制按钮动画 */
+        #touchControls button {
+            transition: all 0.2s ease;
+        }
+        
+        #touchControls:active {
+            animation: shake 0.5s ease-out;
+        }
+        
+        /* 游戏画布动画 */
+        #gameCanvas {
+            border: 3px solid transparent;
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a) border-box;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #gameCanvas:hover {
+            border-color: rgba(76, 175, 80, 0.5);
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.3);
+        }
+        
+        /* 食物闪烁动画 */
+        @keyframes foodGlow {
+            0% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.8; transform: scale(1); }
+        }
+        
+        /* 蛇身渐变动画 */
+        @keyframes snakeGradient {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        
+        /* 游戏进行中的画布效果 */
+        .game-active #gameCanvas {
+            animation: snakeGradient 10s linear infinite;
+        }
+        
+        /* 食物闪烁效果 */
+        .food-glow {
+            animation: foodGlow 1s ease-in-out infinite;
+        }
+        
+        /* 游戏暂停效果 */
+        .game-paused #gameCanvas {
+            filter: brightness(0.7);
+            transform: scale(0.98);
+        }
+        
+        /* 游戏结束效果 */
+        .game-over #gameCanvas {
+            filter: grayscale(0.5) brightness(0.8);
+            animation: shake 0.5s ease-out;
+        }
+
+        #gameContainer {
+            position: relative;
+            border: 4px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            background-color: #1a1a1a;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+            overflow: hidden;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background-color: #1a1a1a;
+            max-width: 100%;
+            height: auto;
+        }
+
+        #controls {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        #controls p {
+            margin: 8px 0;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.85));
+            color: white;
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            z-index: 1000;
+            border: 2px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(20px);
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            z-index: 1000;
+            border: 2px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(20px);
+            min-width: 300px;
+        }
+
+        #gameOver h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #gameOver p {
+            margin: 15px 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        #restartBtn {
+            margin-top: 25px;
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        #restartBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.5);
+        }
+        
+        #startBtn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        #startBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.5);
+        }
+        
+        #startScreen h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #startScreen p {
+            margin: 10px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #f0f0f0;
+        }
+        
+        /* 触屏控制按钮样式 */
+        #touchControls {
+            margin-bottom: 30px;
+        }
+        
+        #touchControls button {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            border: none;
+            outline: none;
+        }
+        
+        #touchControls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        #touchControls button:active {
+            transform: scale(0.9);
+            background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3));
+        }
+        
+        /* 微信登录按钮样式 */
+        #wechatLoginBtn:hover {
+            background: #06AD56;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(7, 193, 96, 0.4);
+        }
+
+        #wechatLoginBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #userInfo {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        #logoutBtn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            .game-container {
+                padding: 25px;
+            }
+            
+            .game-info {
+                gap: 20px;
+            }
+            
+            .game-info div {
+                font-size: 18px;
+                padding: 12px 20px;
+                min-width: 120px;
+            }
+            
+            #controls {
+                font-size: 16px;
+                padding: 20px;
+            }
+            
+            #touchControls {
+                margin-bottom: 20px;
+            }
+            
+            #touchControls button {
+                padding: 18px;
+                font-size: 22px;
+            }
+
+            #userInfo {
+                padding: 8px 16px;
+                font-size: 16px;
+            }
+
+            #logoutBtn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            #wechatLoginBtn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+
+            #wechatLoginBtn svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            .game-container {
+                padding: 20px;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 15px;
+                align-items: center;
+            }
+            
+            .game-info div {
+                width: 100%;
+                max-width: 200px;
+            }
+            
+            #controls {
+                font-size: 14px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>贪吃蛇游戏</h1>
+        <div id="userInfo" style="display: none; align-items: center; gap: 10px;">
+            <div style="display: flex; flex-direction: column;">
+                <span id="userNickname" style="font-size: 18px; font-weight: bold;"></span>
+                <div style="font-size: 14px; color: #FFD700; margin-top: 2px;">
+                    历史最高: <span id="bestScore" style="font-weight: bold;">0</span>
+                </div>
+            </div>
+            <button id="logoutBtn" style="padding: 8px 16px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: white; cursor: pointer; font-size: 14px;">退出</button>
+        </div>
+        <button id="wechatLoginBtn" style="padding: 10px 20px; background: #07C160; border: none; border-radius: 25px; color: white; cursor: pointer; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(7, 193, 96, 0.3);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.405c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.35-8.596-6.35zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.613 2.832c-1.797-.051-3.746.517-5.28 1.783-1.686 1.396-2.587 3.615-1.687 6.006 2.82 1.06 6.046.503 8.224-1.58 1.746-1.702 2.349-4.014 1.879-6.21-.715.017-1.423-.014-2.136 0zM12.622 12c.642 0 1.162.528 1.162 1.179a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.65.52-1.179 1.162-1.179z"/>
+            </svg>
+            微信登录
+        </button>
+    </div>
+    <div class="game-info">
+        <div id="score">得分: 0</div>
+        <div id="speed">速度: 1</div>
+        <div class="speed-controls">
+            <button id="speedUpBtn" title="加速">2x</button>
+            <button id="speedDownBtn" title="减速">0.5x</button>
+        </div>
+    </div>
+    <div style="margin-bottom: 20px;">
+        <a href="leaderboard.html" style="color: #4CAF50; text-decoration: none; font-size: 16px; font-weight: bold; padding: 10px 20px; border: 2px solid #4CAF50; border-radius: 20px; transition: all 0.3s ease;">
+            🏆 查看排行榜
+        </a>
+    </div>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <div id="gameOver" style="display: none;">
+            <h2>游戏结束!</h2>
+            <p>最终得分: <span id="finalScore">0</span></p>
+            <p>最终速度: <span id="finalSpeed">1</span></p>
+            <button id="restartBtn">重新开始</button>
+        </div>
+        <div id="startScreen" style="display: block;">
+            <h2>贪吃蛇游戏</h2>
+            <p>使用方向键控制蛇的移动</p>
+            <p>按空格键开始游戏</p>
+            <button id="startBtn" style="margin-top: 20px; padding: 15px 40px; font-size: 20px; background: linear-gradient(135deg, #4CAF50, #45a049); color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: all 0.3s ease; font-weight: bold;">开始游戏</button>
+        </div>
+    </div>
+    <!-- 触屏控制按钮 -->
+    <div id="touchControls" style="display: none; margin-top: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 250px; margin: 0 auto 20px auto;">
+            <div></div>
+            <button id="upBtn" style="padding: 20px; font-size: 24px; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1)); border: 2px solid rgba(255,255,255,0.5); border-radius: 15px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s ease;">↑</button>
+            <div></div>
+            <button id="leftBtn" style="padding: 20px; font-size: 24px; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1)); border: 2px solid rgba(255,255,255,0.5); border-radius: 15px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s ease;">←</button>
+            <div></div>
+            <button id="rightBtn" style="padding: 20px; font-size: 24px; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1)); border: 2px solid rgba(255,255,255,0.5); border-radius: 15px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s ease;">→</button>
+            <div></div>
+            <button id="downBtn" style="padding: 20px; font-size: 24px; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1)); border: 2px solid rgba(255,255,255,0.5); border-radius: 15px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s ease;">↓</button>
+            <div></div>
+        </div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button id="pauseBtn" style="padding: 12px 30px; font-size: 18px; background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1)); border: 2px solid rgba(255,255,255,0.5); border-radius: 25px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s ease; font-weight: bold;">暂停</button>
+        </div>
+        
+    </div>
+
+    <div id="controls">
+        <p>💡 使用方向键 ↑ ↓ ← → 控制蛇的移动</p>
+        <p>💡 按空格键暂停/继续游戏</p>
+        <p>💡 提示：吃得越多，速度越快！每200分速度提升0.1，最高8倍速</p>
+    </div>
+
+    <!-- 微信JS-SDK -->
+    <script src="https://res.wx.qq.com/connect/zh_CN/htmledition/js/wxLogin.js"></script>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const speedElement = document.getElementById('speed');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalSpeedElement = document.getElementById('finalSpeed');
+        const restartBtn = document.getElementById('restartBtn');
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
+        const wechatLoginBtn = document.getElementById('wechatLoginBtn');
+        const userInfo = document.getElementById('userInfo');
+        const userNickname = document.getElementById('userNickname');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // 微信登录配置
+        const wechatConfig = {
+            appid: 'YOUR_APPID', // 需要在微信开放平台申请
+            redirect_uri: encodeURIComponent(window.location.href),
+            scope: 'snsapi_login',
+            state: Math.random().toString(36).substr(2, 9),
+            href: '' // 自定义样式
+        };
+
+        // 微信登录功能
+        function initWeChatLogin() {
+            // 检查URL参数中是否有微信登录的code
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            if (code && state) {
+                // 使用code获取access_token和用户信息
+                wechatLoginWithCode(code, state);
+            } else {
+                // 检查本地存储中是否有用户信息
+                const userInfo = localStorage.getItem('snakeGameUser');
+                if (userInfo) {
+                    const user = JSON.parse(userInfo);
+                    showUserInfo(user.nickname);
+                }
+            }
+        }
+
+        // 使用code进行微信登录
+        function wechatLoginWithCode(code, state) {
+            // 验证state参数防止CSRF攻击
+            const savedState = localStorage.getItem('wechat_state');
+            if (state !== savedState) {
+                console.error('State参数不匹配，可能存在CSRF攻击');
+                return;
+            }
+
+            // 清除保存的state
+            localStorage.removeItem('wechat_state');
+
+            // 显示加载状态
+            wechatLoginBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                登录中...
+            `;
+            wechatLoginBtn.disabled = true;
+
+            // 调用后端API获取access_token（在实际应用中需要自己的后端）
+            fetch(`/api/wechat/callback?code=${code}&state=${state}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.access_token) {
+                        // 使用access_token获取用户信息
+                        return fetch(`/api/wechat/userinfo?access_token=${data.access_token}`);
+                    } else {
+                        throw new Error('获取access_token失败');
+                    }
+                })
+                .then(response => response.json())
+                .then(userData => {
+                    if (userData.nickname) {
+                        // 保存用户信息到本地存储
+                        const user = {
+                            nickname: userData.nickname,
+                            openid: userData.openid,
+                            headimgurl: userData.headimgurl
+                        };
+                        localStorage.setItem('snakeGameUser', JSON.stringify(user));
+                        
+                        // 显示用户信息
+                        showUserInfo(user.nickname);
+                    } else {
+                        throw new Error('获取用户信息失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('微信登录失败:', error);
+                    alert('微信登录失败，请重试');
+                    // 恢复按钮状态
+                    wechatLoginBtn.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.405c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.35-8.596-6.35zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.613 2.832c-1.797-.051-3.746.517-5.28 1.783-1.686 1.396-2.587 3.615-1.687 6.006 2.82 1.06 6.046.503 8.224-1.58 1.746-1.702 2.349-4.014 1.879-6.21-.715.017-1.423-.014-2.136 0zM12.622 12c.642 0 1.162.528 1.162 1.179a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.65.52-1.179 1.162-1.179z"/>
+                        </svg>
+                        微信登录
+                    `;
+                    wechatLoginBtn.disabled = false;
+                });
+        }
+
+        // 生成微信登录二维码
+        function generateWeChatQRCode() {
+            // 保存state参数
+            const state = wechatConfig.state;
+            localStorage.setItem('wechat_state', state);
+            
+            // 构建微信登录URL
+            const wechatUrl = `https://open.weixin.qq.com/connect/qrconnect?appid=${wechatConfig.appid}&redirect_uri=${wechatConfig.redirect_uri}&response_type=code&scope=${wechatConfig.scope}&state=${wechatConfig.state}#wechat_redirect`;
+            
+            // 打开新窗口进行微信登录
+            window.open(wechatUrl, '_blank', 'width=600,height=400');
+            
+            // 监听登录状态
+            checkLoginStatus();
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const checkInterval = setInterval(() => {
+                const userInfo = localStorage.getItem('snakeGameUser');
+                if (userInfo) {
+                    const user = JSON.parse(userInfo);
+                    showUserInfo(user.nickname);
+                    clearInterval(checkInterval);
+                }
+            }, 1000);
+            
+            // 30秒后停止检查
+            setTimeout(() => {
+                clearInterval(checkInterval);
+            }, 30000);
+        }
+
+        function showUserInfo(nickname) {
+            userNickname.textContent = nickname;
+            wechatLoginBtn.style.display = 'none';
+            userInfo.style.display = 'flex';
+        }
+
+        function hideUserInfo() {
+            wechatLoginBtn.style.display = 'flex';
+            userInfo.style.display = 'none';
+        }
+
+        function weChatLogin() {
+            // 模拟微信登录过程
+            // 在实际应用中，这里应该调用微信的OAuth2.0接口
+            // 这里我们使用模拟数据
+            
+            // 显示加载状态
+            wechatLoginBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                登录中...
+            `;
+            wechatLoginBtn.disabled = true;
+
+            // 模拟API调用延迟
+            setTimeout(() => {
+                // 模拟用户数据
+                const mockUser = {
+                    nickname: '微信用户' + Math.floor(Math.random() * 1000),
+                    openid: 'mock_openid_' + Date.now()
+                };
+
+                // 保存到本地存储
+                localStorage.setItem('snakeGameUser', JSON.stringify(mockUser));
+
+                // 显示用户信息
+                showUserInfo(mockUser.nickname);
+
+                // 恢复按钮状态
+                wechatLoginBtn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.405c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.35-8.596-6.35zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.613 2.832c-1.797-.051-3.746.517-5.28 1.783-1.686 1.396-2.587 3.615-1.687 6.006 2.82 1.06 6.046.503 8.224-1.58 1.746-1.702 2.349-4.014 1.879-6.21-.715.017-1.423-.014-2.136 0zM12.622 12c.642 0 1.162.528 1.162 1.179a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.65.52-1.179 1.162-1.179z"/>
+                    </svg>
+                    微信登录
+                `;
+                wechatLoginBtn.disabled = false;
+            }, 1500);
+        }
+
+        function saveScore(score) {
+            const user = JSON.parse(localStorage.getItem('snakeGameUser'));
+            if (!user) return;
+            
+            // 获取现有得分记录
+            let scores = JSON.parse(localStorage.getItem('snakeGameScores') || '[]');
+            
+            // 获取用户历史最高得分
+            const userBestScore = getUserBestScore(user.openid);
+            
+            // 只有新得分高于历史最高分才保存
+            if (score > userBestScore) {
+                // 添加新得分
+                scores.push({
+                    nickname: user.nickname,
+                    openid: user.openid,
+                    score: score,
+                    date: new Date().toISOString()
+                });
+                
+                // 按得分降序排序
+                scores.sort((a, b) => b.score - a.score);
+                
+                // 只保留前100名
+                scores = scores.slice(0, 100);
+                
+                // 保存到本地存储
+                localStorage.setItem('snakeGameScores', JSON.stringify(scores));
+                
+                // 更新历史最高得分显示
+                updateBestScoreDisplay();
+            }
+        }
+        
+        // 获取用户历史最高得分
+        function getUserBestScore(openid) {
+            const scores = JSON.parse(localStorage.getItem('snakeGameScores') || '[]');
+            const userScores = scores.filter(s => s.openid === openid);
+            return userScores.length > 0 ? Math.max(...userScores.map(s => s.score)) : 0;
+        }
+        
+        // 更新历史最高得分显示
+        function updateBestScoreDisplay() {
+            const user = JSON.parse(localStorage.getItem('snakeGameUser'));
+            if (!user) return;
+            
+            const bestScore = getUserBestScore(user.openid);
+            const bestScoreElement = document.getElementById('bestScore');
+            if (bestScoreElement) {
+                bestScoreElement.textContent = bestScore;
+            }
+        }
+
+        function weChatLogout() {
+            // 清除本地存储
+            localStorage.removeItem('snakeGameUser');
+            
+            // 隐藏用户信息
+            hideUserInfo();
+        }
+
+        // 绑定登录和退出事件
+        wechatLoginBtn.addEventListener('click', weChatLogin);
+        logoutBtn.addEventListener('click', weChatLogout);
+
+        // 初始化微信登录
+        initWeChatLogin();
+        
+        // 初始化历史最高得分显示
+        updateBestScoreDisplay();
+
+        // 游戏设置
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+        const tileCountY = canvas.height / gridSize;
+
+        let snake = [{x: 10, y: 10}];
+        let food = {};
+        let dx = 0;
+        let dy = 0;
+        let score = 0;
+        let gameRunning = true;
+        let gamePaused = false;
+        let gameStarted = false;
+        let speed = 0.5;
+        let gameInterval;
+
+
+
+        // 检测是否为移动设备
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // 显示/隐藏触屏控制
+        function updateTouchControls() {
+            if (isMobileDevice()) {
+                touchControls.style.display = 'block';
+            } else {
+                touchControls.style.display = 'none';
+            }
+        }
+
+        // 触屏控制函数
+        function changeDirection(newDx, newDy) {
+            if (!gameRunning) return;
+            if (dx !== -newDx || dy !== -newDy) {
+                dx = newDx;
+                dy = newDy;
+                gameStarted = true;
+            }
+        }
+
+
+        // 生成食物
+        function generateFood() {
+            let newFood;
+            let foodOnSnake;
+            
+            do {
+                newFood = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCountY)
+                };
+                
+                // 检查食物是否在蛇身上
+                foodOnSnake = snake.some(segment => segment.x === newFood.x && segment.y === newFood.y);
+            } while (foodOnSnake);
+            
+            food = newFood;
+        }
+
+        // 绘制游戏
+        function draw() {
+            // 清空画布
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制蛇
+            for (let i = 0; i < snake.length; i++) {
+                const segment = snake[i];
+                const x = segment.x * gridSize;
+                const y = segment.y * gridSize;
+                
+                if (i === 0) {
+                    // 蛇头 - 使用黄色和眼睛
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x, y, gridSize - 2, gridSize - 2);
+                    
+                    // 绘制眼睛
+                    ctx.fillStyle = 'black';
+                    const eyeSize = 3;
+                    if (dx === 1) { // 向右
+                        ctx.fillRect(x + gridSize - 8, y + 3, eyeSize, eyeSize);
+                        ctx.fillRect(x + gridSize - 8, y + gridSize - 8, eyeSize, eyeSize);
+                    } else if (dx === -1) { // 向左
+                        ctx.fillRect(x + 5, y + 3, eyeSize, eyeSize);
+                        ctx.fillRect(x + 5, y + gridSize - 8, eyeSize, eyeSize);
+                    } else if (dy === 1) { // 向下
+                        ctx.fillRect(x + 3, y + gridSize - 8, eyeSize, eyeSize);
+                        ctx.fillRect(x + gridSize - 8, y + gridSize - 8, eyeSize, eyeSize);
+                    } else if (dy === -1) { // 向上
+                        ctx.fillRect(x + 3, y + 5, eyeSize, eyeSize);
+                        ctx.fillRect(x + gridSize - 8, y + 5, eyeSize, eyeSize);
+                    } else { // 静止状态
+                        ctx.fillRect(x + 3, y + 3, eyeSize, eyeSize);
+                        ctx.fillRect(x + gridSize - 8, y + 3, eyeSize, eyeSize);
+                    }
+                } else {
+                    // 蛇身 - 使用渐变绿色
+                    const greenValue = Math.max(50, 255 - (i * 10));
+                    ctx.fillStyle = `rgb(0, ${greenValue}, 0)`;
+                    ctx.fillRect(x, y, gridSize - 2, gridSize - 2);
+                }
+            }
+
+            // 绘制食物 - 使用更好的视觉效果
+            ctx.fillStyle = '#FF4444';
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+            
+            // 食物高光效果
+            ctx.fillStyle = '#FF8888';
+            ctx.fillRect(food.x * gridSize + 2, food.y * gridSize + 2, 4, 4);
+        }
+
+        // 更新游戏状态
+        function update() {
+            if (!gameRunning || gamePaused) return;
+
+            // 如果蛇还没有开始移动，不更新
+            if (dx === 0 && dy === 0) return;
+
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+            // 检查墙壁碰撞
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCountY) {
+                gameOver();
+                return;
+            }
+
+            // 检查自身碰撞（从第二个身体部分开始检查，因为头部移动后可能会与原来的头部位置重叠）
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            snake.unshift(head);
+
+            // 检查是否吃到食物
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                scoreElement.textContent = `得分: ${score}`;
+                
+                // 添加得分增加动画
+                scoreElement.classList.remove('score-increase');
+                void scoreElement.offsetWidth; // 触发重排
+                scoreElement.classList.add('score-increase');
+                
+                generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        // 游戏结束
+        function gameOver() {
+            gameRunning = false;
+            
+            // 保存得分
+            saveScore(score);
+            
+            finalScoreElement.textContent = score;
+            gameOverElement.style.display = 'none';
+            startScreen.style.display = 'block';
+            startScreen.querySelector('h2').textContent = '游戏结束!';
+            startScreen.querySelector('p').textContent = `最终得分: ${score}`;
+            startScreen.querySelector('p:nth-child(3)').textContent = '点击开始按钮重新开始';
+        }
+
+        // 开始游戏
+        function startGame() {
+            console.log('startGame() called');
+            startScreen.style.display = 'none';
+            // 重置开始界面文本
+            startScreen.querySelector('h2').textContent = '贪吃蛇游戏';
+            startScreen.querySelector('p').textContent = '使用方向键控制蛇的移动';
+            startScreen.querySelector('p:nth-child(3)').textContent = '按空格键开始游戏';
+            
+            snake = [{x: 10, y: 10}];
+            dx = 1; // 默认向右移动
+            dy = 0;
+            score = 0;
+            gameRunning = true;
+            gamePaused = false;
+            gameStarted = true;
+            speed = 0.5;
+            console.log('Speed set to:', speed);
+            scoreElement.textContent = `得分: ${score}`;
+            speedElement.textContent = `速度: ${speed.toFixed(1)}`;
+            gameOverElement.style.display = 'none';
+            generateFood();
+            startGameLoop();
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            startScreen.style.display = 'none';
+            snake = [{x: 10, y: 10}];
+            dx = 1; // 默认向右移动
+            dy = 0;
+            score = 0;
+            gameRunning = true;
+            gamePaused = false;
+            gameStarted = true;
+            speed = 0.5;
+            scoreElement.textContent = `得分: ${score}`;
+            speedElement.textContent = `速度: ${speed.toFixed(1)}`;
+            gameOverElement.style.display = 'none';
+            generateFood();
+            startGameLoop();
+        }
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    if (dy !== 1) {
+                        dx = 0;
+                        dy = -1;
+                        gameStarted = true;
+                    }
+                    break;
+                case 'ArrowDown':
+                    if (dy !== -1) {
+                        dx = 0;
+                        dy = 1;
+                        gameStarted = true;
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (dx !== 1) {
+                        dx = -1;
+                        dy = 0;
+                        gameStarted = true;
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (dx !== -1) {
+                        dx = 1;
+                        dy = 0;
+                        gameStarted = true;
+                    }
+                    break;
+                case ' ':
+                    if (!gameStarted) {
+                        startGame();
+                    } else {
+                        gamePaused = !gamePaused;
+                    }
+                    break;
+            }
+        });
+
+        // 重新开始按钮
+        restartBtn.addEventListener('click', restartGame);
+        
+        // 开始按钮
+        startBtn.addEventListener('click', startGame);
+
+
+
+        // 触屏控制
+        upBtn.addEventListener('click', () => changeDirection(0, -1));
+        downBtn.addEventListener('click', () => changeDirection(0, 1));
+        leftBtn.addEventListener('click', () => changeDirection(-1, 0));
+        rightBtn.addEventListener('click', () => changeDirection(1, 0));
+        pauseBtn.addEventListener('click', () => {
+            if (!gameRunning) return;
+            gamePaused = !gamePaused;
+            pauseBtn.textContent = gamePaused ? '继续' : '暂停';
+        });
+
+        // 初始化触屏控制
+        updateTouchControls();
+
+
+        // 游戏循环
+        function gameLoop() {
+            update();
+            draw();
+        }
+
+
+        // 开始游戏循环
+        function startGameLoop() {
+            const intervalTime = Math.max(50, 150 - (speed - 1) * 20); // 基于当前速度计算间隔
+            gameInterval = setInterval(gameLoop, intervalTime);
+        }
+
+        // 绑定速度控制事件
+        const speedUpBtn = document.getElementById('speedUpBtn');
+        const speedDownBtn = document.getElementById('speedDownBtn');
+        
+        speedUpBtn.addEventListener('click', () => {
+            if (speed < 16) { // 最大16倍速
+                speed *= 2;
+                updateSpeedDisplay();
+            }
+        });
+        
+        speedDownBtn.addEventListener('click', () => {
+            if (speed > 0.125) { // 最小0.125倍速
+                speed *= 0.5;
+                updateSpeedDisplay();
+            }
+        });
+        
+        // 更新速度显示
+        function updateSpeedDisplay() {
+            speedElement.textContent = `速度: ${speed.toFixed(1)}`;
+            
+            // 添加速度变化动画
+            speedElement.classList.remove('speed-change');
+            void speedElement.offsetWidth; // 触发重排
+            speedElement.classList.add('speed-change');
+            
+            if (gameInterval) {
+                clearInterval(gameInterval);
+                const intervalTime = Math.max(50, 150 - (speed - 1) * 20); // 最快50ms
+                gameInterval = setInterval(gameLoop, intervalTime);
+            }
+        }
+        
+        // 初始化游戏
+        generateFood();
+        draw();
+    </script>
+</body>
+</html>
+
